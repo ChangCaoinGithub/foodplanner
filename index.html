@@ -52,11 +52,11 @@ textarea{min-height:90px;resize:vertical}.formgrid{display:grid;grid-template-co
 <body>
 <div class="wrap">
 <div id="authGate" class="card auth-card hidden">
-  <h2>Enter the shared kitchen</h2>
-  <div class="meta" style="margin-bottom:12px">Use the email address that was invited to this Supabase project. No password is needed.</div>
-  <input id="loginEmail" type="email" placeholder="you@example.com" autocomplete="email" />
+  <h2>Enter your email</h2>
+  <div class="meta" style="margin-bottom:12px">Use the email address that has access to this kitchen.</div>
+  <input id="loginEmail" type="email" placeholder="chang@example.com" autocomplete="email" />
   <div class="auth-actions">
-    <button id="sendMagicLink" class="primary" style="flex:1">Send Magic Link</button>
+    <button id="sendMagicLink" class="primary" style="flex:1">Continue</button>
   </div>
   <div id="authMessage" class="meta" style="margin-top:10px"></div>
 </div>
@@ -187,11 +187,12 @@ async function sendMagicLink(){
   }
   const email=$('#loginEmail').value.trim();
   if(!email){
-    $('#authMessage').textContent='Enter your invited email address.';
+    $('#authMessage').textContent='Please enter your email address.';
     return;
   }
   $('#sendMagicLink').disabled=true;
-  $('#authMessage').textContent='Sending…';
+  $('#sendMagicLink').textContent='Checking…';
+  $('#authMessage').textContent='Checking access…';
   const {error}=await db.auth.signInWithOtp({
     email,
     options:{
@@ -200,10 +201,23 @@ async function sendMagicLink(){
     }
   });
   $('#sendMagicLink').disabled=false;
+  $('#sendMagicLink').textContent='Continue';
   if(error){
-    $('#authMessage').textContent=error.message;
+    const msg=(error.message || '').toLowerCase();
+    if(
+      msg.includes('signups not allowed') ||
+      msg.includes('user not found') ||
+      msg.includes('invalid login') ||
+      msg.includes('not allowed')
+    ){
+      $('#authMessage').textContent='This email does not have access to this kitchen.';
+    }else if(msg.includes('rate limit')){
+      $('#authMessage').textContent='Too many sign-in emails were requested. Please try again later.';
+    }else{
+      $('#authMessage').textContent='We could not send the sign-in link. Please try again.';
+    }
   }else{
-    $('#authMessage').textContent='Magic Link sent. Open the email on this device and click the link.';
+    $('#authMessage').textContent='We sent you a sign-in link. You only need to do this once on this device.';
   }
 }
 async function checkAuthAndLoad(){
