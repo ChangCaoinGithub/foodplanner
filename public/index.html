@@ -59,8 +59,7 @@ textarea{min-height:90px;resize:vertical}.formgrid{display:grid;grid-template-co
   <div id="appShell" class="hidden">
     <header>
       <div>
-        <h1>Food Planner 🍅</h1>
-        <div class="sub">Shared fridge, freezer, pantry and meal calendar.</div>
+        <h1>Food Planner</h1>
       </div>
       <div class="top-actions">
         <div class="tabs">
@@ -189,7 +188,7 @@ function renderIngredients(){
   const list=ingredients.filter(x=>x.storage===activeStorage&&x.name.toLowerCase().includes(q));
   $('#ingredientList').innerHTML=list.length?list.map(x=>`
     <div class="ingredient">
-      <div><div class="name">${esc(x.name)}</div><div class="meta">${esc(x.storage)}</div></div>
+      <div><div class="name">${esc(x.name)}</div></div>
       <input type="number" min="0" step="0.1" value="${x.quantity}" data-qty="${x.id}">
       <select data-unit="${x.id}">${['kg','ml','portion','pieces'].map(u=>`<option ${u===x.unit?'selected':''}>${u}</option>`).join('')}</select>
       <select data-storage="${x.id}">${['Fridge','Freezer','Outside'].map(s=>`<option ${s===x.storage?'selected':''}>${s}</option>`).join('')}</select>
