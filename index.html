@@ -53,7 +53,7 @@ textarea{min-height:90px;resize:vertical}.formgrid{display:grid;grid-template-co
 <div class="wrap">
 <div id="authGate" class="card auth-card hidden">
   <h2>Enter your email</h2>
-  <div class="meta" style="margin-bottom:12px">Use the email address that has access to this kitchen.</div>
+  <div class="meta" style="margin-bottom:12px">Enter one of the approved family emails.</div>
   <input id="loginEmail" type="email" placeholder="chang@example.com" autocomplete="email" />
   <div class="auth-actions">
     <button id="sendMagicLink" class="primary" style="flex:1">Continue</button>
@@ -180,45 +180,39 @@ function showApp(){
   $('#authGate').classList.add('hidden');
   $('#appShell').classList.remove('hidden');
 }
-async function sendMagicLink(){
+async function enterKitchen(){
   if(!configured){
-    $('#authMessage').textContent='Configure Supabase first.';
+    $('#authMessage').textContent='Supabase is not configured yet.';
     return;
   }
-  const email=$('#loginEmail').value.trim();
+
+  const email=$('#loginEmail').value.trim().toLowerCase();
+
   if(!email){
     $('#authMessage').textContent='Please enter your email address.';
     return;
   }
+
   $('#sendMagicLink').disabled=true;
   $('#sendMagicLink').textContent='Checking…';
-  $('#authMessage').textContent='Checking access…';
-  const {error}=await db.auth.signInWithOtp({
+  $('#authMessage').textContent='';
+
+  const {data,error}=await db.auth.signInWithPassword({
     email,
-    options:{
-      shouldCreateUser:false,
-      emailRedirectTo:APP_URL
-    }
+    password: email
   });
+
   $('#sendMagicLink').disabled=false;
   $('#sendMagicLink').textContent='Continue';
-  if(error){
-    const msg=(error.message || '').toLowerCase();
-    if(
-      msg.includes('signups not allowed') ||
-      msg.includes('user not found') ||
-      msg.includes('invalid login') ||
-      msg.includes('not allowed')
-    ){
-      $('#authMessage').textContent='This email does not have access to this kitchen.';
-    }else if(msg.includes('rate limit')){
-      $('#authMessage').textContent='Too many sign-in emails were requested. Please try again later.';
-    }else{
-      $('#authMessage').textContent='We could not send the sign-in link. Please try again.';
-    }
-  }else{
-    $('#authMessage').textContent='We sent you a sign-in link. You only need to do this once on this device.';
+
+  if(error || !data?.session){
+    $('#authMessage').textContent='This email does not have access to this kitchen.';
+    return;
   }
+
+  $('#authMessage').textContent='';
+  showApp();
+  await loadAll();
 }
 async function checkAuthAndLoad(){
   if(!configured){
@@ -400,8 +394,8 @@ function selectCalendarDay(key){
   selectedCalendarDate=key; const [y,m]=key.split('-').map(Number); calendarCursor=new Date(y,m-1,1); renderCalendar();
 }
 
-$('#sendMagicLink').addEventListener('click',sendMagicLink);
-$('#loginEmail').addEventListener('keydown',e=>{if(e.key==='Enter')sendMagicLink()});
+$('#sendMagicLink').addEventListener('click',enterKitchen);
+$('#loginEmail').addEventListener('keydown',e=>{if(e.key==='Enter')enterKitchen()});
 
 $('#addIngredient').addEventListener('click',addIngredient);
 $('#saveMeal').addEventListener('click',saveMeal);
