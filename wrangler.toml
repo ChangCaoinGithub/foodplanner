@@ -1,0 +1,15 @@
+name = "foodplanner"
+main = "worker.js"
+compatibility_date = "2026-08-21"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+# D1 is already bound in your Cloudflare dashboard as variable DB.
+# If Cloudflare Git deploy asks for config-based D1 instead, add:
+#
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "food-planner-db"
+# database_id = "YOUR_DATABASE_ID"
